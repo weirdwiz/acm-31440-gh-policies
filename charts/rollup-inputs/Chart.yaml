@@ -1,0 +1,4 @@
+apiVersion: v2
+name: rollup-inputs
+description: Per-regional-hub inputs for the global metrics rollup (Secret + ConfigMap). TLS values are passed by the Argo Application, never stored in git.
+version: 0.1.0

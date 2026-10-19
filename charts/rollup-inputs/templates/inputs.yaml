@@ -1,0 +1,23 @@
+{{- if or (not .Values.tls.tlsCrt) (not .Values.remoteWriteUrl) (not .Values.hubName) }}
+{{- fail "hubName, remoteWriteUrl and tls.* must be set in the Application" }}
+{{- end }}
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: global-obs-rollup-tls
+  namespace: global-policies
+data:
+  ca.crt: {{ .Values.tls.caCrt }}
+  tls.crt: {{ .Values.tls.tlsCrt }}
+  tls.key: {{ .Values.tls.tlsKey }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: global-observability
+  namespace: global-policies
+data:
+  hub-name: {{ .Values.hubName | quote }}
+  remote-write-url: {{ .Values.remoteWriteUrl | quote }}
+  metric-regex: {{ .Values.metricRegex | quote }}

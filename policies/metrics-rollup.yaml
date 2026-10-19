@@ -1,0 +1,86 @@
+# Runs on the regional hub's own local-cluster. Hub templates resolve on the regional hub and
+# read global-policies/{global-obs-rollup-tls,global-observability}, which the rollup-inputs
+# Argo app provides. MCOA then copies the secret and the extra remoteWrite to every managed
+# cluster's PrometheusAgent, so VM metrics go straight to the Global Hub.
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: hub-self
+  namespace: global-policies
+spec:
+  clusterSets: [default]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchLabels:
+          local-cluster: "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: metrics-rollup-to-global-hub
+  namespace: global-policies
+  annotations:
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/categories: SI System and Information Integrity
+    policy.open-cluster-management.io/controls: SI-4 System Monitoring
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: mcoa-global-remote-write
+      spec:
+        remediationAction: enforce
+        severity: low
+        object-templates:
+        - complianceType: mustonlyhave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: global-obs-rollup-tls
+              namespace: open-cluster-management-observability
+            data: '{{hub copySecretData "global-policies" "global-obs-rollup-tls" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: monitoring.rhobs/v1alpha1
+            kind: PrometheusAgent
+            metadata:
+              name: mcoa-default-platform-metrics-collector-global
+              namespace: open-cluster-management-observability
+            spec:
+              secrets:
+              - global-obs-rollup-tls
+              remoteWrite:
+              - name: global-hub
+                url: '{{hub fromConfigMap "global-policies" "global-observability" "remote-write-url" hub}}'
+                tlsConfig:
+                  caFile: /etc/prometheus/secrets/global-obs-rollup-tls/ca.crt
+                  certFile: /etc/prometheus/secrets/global-obs-rollup-tls/tls.crt
+                  keyFile: /etc/prometheus/secrets/global-obs-rollup-tls/tls.key
+                writeRelabelConfigs:
+                - action: keep
+                  sourceLabels: [__name__]
+                  regex: '{{hub fromConfigMap "global-policies" "global-observability" "metric-regex" hub}}'
+                - action: replace
+                  targetLabel: managed_hub
+                  replacement: '{{hub fromConfigMap "global-policies" "global-observability" "hub-name" hub}}'
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: metrics-rollup-to-global-hub
+  namespace: global-policies
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: hub-self
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: metrics-rollup-to-global-hub

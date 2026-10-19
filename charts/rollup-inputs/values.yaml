@@ -1,0 +1,7 @@
+hubName: ""          # set per regional hub
+remoteWriteUrl: ""   # GH observatorium-api .../api/metrics/v1/default/api/v1/receive
+metricRegex: "kubevirt_.*|cnv:.*|up|ALERTS|csv_succeeded|csv_abnormal|kube_node_labels|kube_node_role|kube_node_status_allocatable|kube_pod_info|node_cpu_seconds_total|node_memory_MemTotal_bytes|instance:node_.*|node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m|descheduler:.*|machine_cpu_cores"
+tls:                 # base64 PEMs; supplied via Application helm.valuesObject only
+  caCrt: ""
+  tlsCrt: ""
+  tlsKey: ""
