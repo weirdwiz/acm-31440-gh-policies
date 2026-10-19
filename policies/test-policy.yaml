@@ -52,7 +52,7 @@ spec:
               namespace: default
             data:
               source: global-hub-argocd
-              version: v1
+              version: v2
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
