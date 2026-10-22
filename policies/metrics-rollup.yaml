@@ -20,10 +20,6 @@ kind: Policy
 metadata:
   name: metrics-rollup-to-global-hub
   namespace: global-policies
-  annotations:
-    policy.open-cluster-management.io/standards: NIST SP 800-53
-    policy.open-cluster-management.io/categories: SI System and Information Integrity
-    policy.open-cluster-management.io/controls: SI-4 System Monitoring
 spec:
   remediationAction: enforce
   disabled: false
