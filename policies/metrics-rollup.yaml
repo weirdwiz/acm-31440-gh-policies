@@ -2,6 +2,14 @@
 # read global-policies/{global-obs-rollup-tls,global-observability}, which the rollup-inputs
 # Argo app provides. MCOA then copies the secret and the extra remoteWrite to every managed
 # cluster's PrometheusAgent, so VM metrics go straight to the Global Hub.
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: default
+  namespace: global-policies
+spec:
+  clusterSet: default
+---
 apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
 metadata:
