@@ -1,0 +1,53 @@
+# PREREQUISITE ON REGIONAL-HUB, NOT SYNCED BY ARGO (no Application points at writestorage/prereq/).
+# Apply by hand once on RH: KUBECONFIG=$HOME/.kube/acm-31440-rh oc apply -f writestorage/prereq/rh-placements.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: rh-self
+  namespace: open-cluster-management-global-set
+  labels:
+    acm47259-fix: "true"
+  annotations:
+    acm47259/purpose: RH's own MCOA targets its local-cluster only (regional hub own metrics, remote-written to GH too)
+spec:
+  clusterSets:
+  - global
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - key: name
+          operator: In
+          values:
+          - local-cluster
+  tolerations:
+  - key: cluster.open-cluster-management.io/unreachable
+    operator: Equal
+  - key: cluster.open-cluster-management.io/unavailable
+    operator: Equal
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: rh-leaves
+  namespace: open-cluster-management-global-set
+  labels:
+    acm47259-fix: "true"
+  annotations:
+    acm47259/purpose: RH's MCOA for leaf clusters (vm-cluster); these stay on RH only
+spec:
+  clusterSets:
+  - global
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - key: name
+          operator: NotIn
+          values:
+          - local-cluster
+  tolerations:
+  - key: cluster.open-cluster-management.io/unreachable
+    operator: Equal
+  - key: cluster.open-cluster-management.io/unavailable
+    operator: Equal

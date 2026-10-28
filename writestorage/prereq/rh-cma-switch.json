@@ -1,0 +1,127 @@
+[
+ {
+  "op": "test",
+  "path": "/spec/installStrategy/placements/0/name",
+  "value": "global"
+ },
+ {
+  "op": "replace",
+  "path": "/spec/installStrategy/placements",
+  "value": [
+   {
+    "configs": [
+     {
+      "group": "monitoring.rhobs",
+      "name": "mcoa-default-platform-metrics-collector-global",
+      "namespace": "open-cluster-management-observability",
+      "resource": "prometheusagents"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics-kubevirt",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics-right-sizing",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics-alerts",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics-hcp",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "mcoa-default-user-workload-metrics-collector-global",
+      "namespace": "open-cluster-management-observability",
+      "resource": "prometheusagents"
+     },
+     {
+      "group": "monitoring.coreos.com",
+      "name": "platform-rules-default",
+      "namespace": "open-cluster-management-observability",
+      "resource": "prometheusrules"
+     }
+    ],
+    "name": "rh-self",
+    "namespace": "open-cluster-management-global-set",
+    "rolloutStrategy": {
+     "type": "All"
+    }
+   },
+   {
+    "configs": [
+     {
+      "group": "monitoring.rhobs",
+      "name": "mcoa-default-platform-metrics-collector-global",
+      "namespace": "open-cluster-management-observability",
+      "resource": "prometheusagents"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics-kubevirt",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics-right-sizing",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics-alerts",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "platform-metrics-hcp",
+      "namespace": "open-cluster-management-observability",
+      "resource": "scrapeconfigs"
+     },
+     {
+      "group": "monitoring.rhobs",
+      "name": "mcoa-default-user-workload-metrics-collector-global",
+      "namespace": "open-cluster-management-observability",
+      "resource": "prometheusagents"
+     },
+     {
+      "group": "monitoring.coreos.com",
+      "name": "platform-rules-default",
+      "namespace": "open-cluster-management-observability",
+      "resource": "prometheusrules"
+     }
+    ],
+    "name": "rh-leaves",
+    "namespace": "open-cluster-management-global-set",
+    "rolloutStrategy": {
+     "type": "All"
+    }
+   }
+  ]
+ }
+]
