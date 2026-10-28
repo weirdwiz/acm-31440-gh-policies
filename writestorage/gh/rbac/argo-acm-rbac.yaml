@@ -60,3 +60,32 @@ subjects:
 - kind: ServiceAccount
   name: openshift-gitops-argocd-application-controller
   namespace: openshift-gitops
+---
+# Cluster-scoped: the MCSB admission webhook requires "bind" on the clusterset "default".
+# A namespaced Role cannot grant this (managedclustersets is cluster-scoped), so use a ClusterRole.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: writestorage-argo-clusterset-bind
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+rules:
+- apiGroups: ["cluster.open-cluster-management.io"]
+  resources: ["managedclustersets/bind"]
+  resourceNames: ["default"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: writestorage-argo-clusterset-bind
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: writestorage-argo-clusterset-bind
+subjects:
+- kind: ServiceAccount
+  name: openshift-gitops-argocd-application-controller
+  namespace: openshift-gitops
