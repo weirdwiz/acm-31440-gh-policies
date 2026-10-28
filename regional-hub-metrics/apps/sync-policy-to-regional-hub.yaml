@@ -1,0 +1,23 @@
+# Regional hub: Policy that adds the Global Hub remoteWrite to the regional hub's own collector, and labels its series.
+# Bootstrap all apps once: KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f regional-hub-metrics/apps/
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sync-policy-to-regional-hub
+  namespace: openshift-gitops
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/weirdwiz/acm-31440-gh-policies.git
+    targetRevision: regional-hub-metrics
+    path: regional-hub-metrics/sync-policy
+  destination:
+    server: https://cluster-proxy-addon-user.multicluster-engine.svc.cluster.local:9092/regional-hub
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true

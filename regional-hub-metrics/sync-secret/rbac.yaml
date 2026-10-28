@@ -1,13 +1,10 @@
-# RBAC for the Global Hub's Argo application-controller (openshift-gitops-argocd-application-controller).
-# Its built-in ClusterRole has no ACM group rights, so these grants cover only what gh/ needs.
-# Wave -1: applied before the Policy, Placement and PrometheusAgent objects in the same sync.
-# The controller can create them because its ClusterRole holds rbac.authorization.k8s.io "*" verbs.
-# Namespace is open-cluster-management-observability: the hub fromSecret template is restricted to the
-# policy's own namespace, so the cert Policy must live where the MCO source secrets are.
+# Lets the Global Hub's Argo application-controller create this app's objects. Its built-in ClusterRole has no ACM
+# group rights; it can create these grants itself because it holds rbac.authorization.k8s.io "*".
+# Wave -1: applied before the Policy, Placement and ManagedClusterSetBinding in the same sync.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: regional-hub-metrics-argo-gh
+  name: sync-secret-to-regional-hub
   namespace: open-cluster-management-observability
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
@@ -18,32 +15,28 @@ rules:
 - apiGroups: ["cluster.open-cluster-management.io"]
   resources: ["placements", "managedclustersetbindings"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-- apiGroups: ["monitoring.rhobs"]
-  resources: ["prometheusagents"]
-  verbs: ["get", "list", "watch", "patch", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: regional-hub-metrics-argo-gh
+  name: sync-secret-to-regional-hub
   namespace: open-cluster-management-observability
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: regional-hub-metrics-argo-gh
+  name: sync-secret-to-regional-hub
 subjects:
 - kind: ServiceAccount
   name: openshift-gitops-argocd-application-controller
   namespace: openshift-gitops
 ---
-# Cluster-scoped: the MCSB admission webhook requires "bind" on the clusterset "default".
-# A namespaced Role cannot grant this (managedclustersets is cluster-scoped), so use a ClusterRole.
+# The ManagedClusterSetBinding webhook requires "bind" on clusterset "default" (cluster-scoped, so a ClusterRole).
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: regional-hub-metrics-argo-clusterset-bind
+  name: sync-secret-to-regional-hub-clusterset-bind
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 rules:
@@ -55,13 +48,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: regional-hub-metrics-argo-clusterset-bind
+  name: sync-secret-to-regional-hub-clusterset-bind
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: regional-hub-metrics-argo-clusterset-bind
+  name: sync-secret-to-regional-hub-clusterset-bind
 subjects:
 - kind: ServiceAccount
   name: openshift-gitops-argocd-application-controller

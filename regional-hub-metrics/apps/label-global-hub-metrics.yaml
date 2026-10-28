@@ -1,9 +1,9 @@
-# Argo Application pushed to regional-hub (Argo cluster secret openshift-gitops/regional-hub-gitops-cluster-secret).
-# Delivers one Policy that the regional hub's own governance enforces on its local-cluster.
+# Global Hub: labels GH's own series managed_hub=global-hub so they never mix with the regional hub's local-cluster.
+# Bootstrap all apps once: KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f regional-hub-metrics/apps/
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: regional-hub-metrics-rh
+  name: label-global-hub-metrics
   namespace: openshift-gitops
   finalizers:
   - resources-finalizer.argocd.argoproj.io/background
@@ -12,9 +12,9 @@ spec:
   source:
     repoURL: https://github.com/weirdwiz/acm-31440-gh-policies.git
     targetRevision: regional-hub-metrics
-    path: regional-hub-metrics/rh
+    path: regional-hub-metrics/label-global-hub
   destination:
-    server: https://cluster-proxy-addon-user.multicluster-engine.svc.cluster.local:9092/regional-hub
+    server: https://kubernetes.default.svc
   syncPolicy:
     automated:
       prune: false

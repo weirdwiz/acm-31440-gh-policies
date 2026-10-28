@@ -1,0 +1,29 @@
+# Lets the Global Hub's Argo application-controller patch GH's own MCOA collector templates.
+# Wave -1: applied before the PrometheusAgent patches in the same sync.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: label-global-hub-metrics
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+rules:
+- apiGroups: ["monitoring.rhobs"]
+  resources: ["prometheusagents"]
+  verbs: ["get", "list", "watch", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: label-global-hub-metrics
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: label-global-hub-metrics
+subjects:
+- kind: ServiceAccount
+  name: openshift-gitops-argocd-application-controller
+  namespace: openshift-gitops
