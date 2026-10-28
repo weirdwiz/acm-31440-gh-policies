@@ -1,0 +1,8 @@
+# Lets the Placement below see the Global Hub's own local-cluster (clusterset "default").
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: default
+  namespace: acm47259-policies
+spec:
+  clusterSet: default

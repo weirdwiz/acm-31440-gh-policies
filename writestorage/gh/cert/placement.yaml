@@ -1,0 +1,14 @@
+# Selects ONLY the Global Hub's local-cluster. regional-hub is never a target of any GH Policy (hosted mode, no policy addon).
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: gh-local-only
+  namespace: acm47259-policies
+spec:
+  clusterSets:
+  - default
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchLabels:
+          local-cluster: "true"

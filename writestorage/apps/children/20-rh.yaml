@@ -1,0 +1,24 @@
+# wave 1: objects pushed to regional-hub (destination = Argo cluster secret openshift-gitops/regional-hub-gitops-cluster-secret).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: writestorage-rh
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/weirdwiz/acm-31440-gh-policies.git
+    targetRevision: writestorage-e2e
+    path: writestorage/rh
+  destination:
+    server: https://cluster-proxy-addon-user.multicluster-engine.svc.cluster.local:9092/regional-hub
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true

@@ -1,0 +1,23 @@
+# RH's own MCOA hub templates: RH-owned series (local-cluster, vm-cluster) carry managed_hub=regional-hub.
+# Partial objects, server-side applied, operator-owned: never prune or delete.
+apiVersion: monitoring.rhobs/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: mcoa-default-platform-metrics-collector-global
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  externalLabels:
+    managed_hub: regional-hub
+---
+apiVersion: monitoring.rhobs/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: mcoa-default-user-workload-metrics-collector-global
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  externalLabels:
+    managed_hub: regional-hub

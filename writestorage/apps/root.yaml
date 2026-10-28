@@ -1,0 +1,23 @@
+# One-time bootstrap (the ONLY manual apply):
+#   KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f writestorage/apps/root.yaml
+# Everything else is synced from Git through this app (app-of-apps) on the Global Hub.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: writestorage-root
+  namespace: openshift-gitops
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/weirdwiz/acm-31440-gh-policies.git
+    targetRevision: writestorage-e2e
+    path: writestorage/apps/children
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true

@@ -1,0 +1,54 @@
+# Owns ManifestWork regional-hub/acm47259-gh-write-cert on the Global Hub. The Secret data is rendered
+# at runtime from the MCO-managed GH source secrets (hub templates); no key material is stored in Git.
+# Because the template is re-evaluated, the ManifestWork follows GH's client-cert renewal.
+# The Secret name (gh-observatorium-client) is NOT the MCOA name, so it does not clash with RH's MCOA work.
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: acm47259-gh-write-cert
+  namespace: acm47259-policies
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: acm47259-gh-write-cert
+      spec:
+        remediationAction: enforce
+        severity: low
+        object-templates-raw: |
+          apiVersion: work.open-cluster-management.io/v1
+          kind: ManifestWork
+          metadata:
+            name: acm47259-gh-write-cert
+            namespace: regional-hub
+          spec:
+            workload:
+              manifests:
+              - apiVersion: v1
+                kind: Secret
+                metadata:
+                  name: gh-observatorium-client
+                  namespace: open-cluster-management-observability
+                type: Opaque
+                data:
+                  tls.crt: '{{hub fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.crt" hub}}'
+                  tls.key: '{{hub fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.key" hub}}'
+                  ca.crt: '{{hub fromSecret "open-cluster-management-observability" "observability-server-ca-certs" "ca.crt" hub}}'
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: acm47259-gh-write-cert
+  namespace: acm47259-policies
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: gh-local-only
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: acm47259-gh-write-cert

@@ -1,0 +1,23 @@
+# GH's own MCOA hub templates: the Global Hub's own series carry managed_hub=global-hub.
+# Partial objects, server-side applied. Operator-owned: never prune or delete.
+apiVersion: monitoring.rhobs/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: mcoa-default-platform-metrics-collector-global
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  externalLabels:
+    managed_hub: global-hub
+---
+apiVersion: monitoring.rhobs/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: mcoa-default-user-workload-metrics-collector-global
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  externalLabels:
+    managed_hub: global-hub
