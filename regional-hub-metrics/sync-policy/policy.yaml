@@ -22,7 +22,7 @@ spec:
         remediationAction: enforce
         severity: low
         object-templates:
-        # RH's own platform collector: label + extra remote write to the Global Hub.
+        # RH's own platform collector, the only one that writes to the Global Hub: extra remote write + origin label.
         - complianceType: musthave
           objectDefinition:
             apiVersion: monitoring.rhobs/v1alpha1
@@ -43,37 +43,6 @@ spec:
                   caFile: /etc/prometheus/secrets/gh-observatorium-client/ca.crt
                   certFile: /etc/prometheus/secrets/gh-observatorium-client/tls.crt
                   keyFile: /etc/prometheus/secrets/gh-observatorium-client/tls.key
-        # Label only: RH's own user workloads and the leaves stay on the regional hub.
-        - complianceType: musthave
-          objectDefinition:
-            apiVersion: monitoring.rhobs/v1alpha1
-            kind: PrometheusAgent
-            metadata:
-              name: mcoa-default-user-workload-metrics-collector-rh-self
-              namespace: open-cluster-management-observability
-            spec:
-              externalLabels:
-                managed_hub: regional-hub
-        - complianceType: musthave
-          objectDefinition:
-            apiVersion: monitoring.rhobs/v1alpha1
-            kind: PrometheusAgent
-            metadata:
-              name: mcoa-default-platform-metrics-collector-rh-leaves
-              namespace: open-cluster-management-observability
-            spec:
-              externalLabels:
-                managed_hub: regional-hub
-        - complianceType: musthave
-          objectDefinition:
-            apiVersion: monitoring.rhobs/v1alpha1
-            kind: PrometheusAgent
-            metadata:
-              name: mcoa-default-user-workload-metrics-collector-rh-leaves
-              namespace: open-cluster-management-observability
-            spec:
-              externalLabels:
-                managed_hub: regional-hub
 ---
 # Selects only the regional hub's own local-cluster.
 apiVersion: cluster.open-cluster-management.io/v1beta1

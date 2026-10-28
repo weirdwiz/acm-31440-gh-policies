@@ -1,13 +1,15 @@
-# Lives in open-cluster-management-observability: hub fromSecret is restricted to the policy namespace.
-# Owns ManifestWork regional-hub/acm47259-gh-write-cert on the Global Hub. The Secret data is rendered
-# at runtime from the MCO-managed GH source secrets (hub templates); no key material is stored in Git.
-# Because the template is re-evaluated, the ManifestWork follows GH's client-cert renewal.
-# The Secret name (gh-observatorium-client) is NOT the MCOA name, so it does not clash with RH's MCOA work.
+# Copies the Global Hub's metrics write cert to the regional hub.
+# Enforced by the Global Hub's own governance on its local-cluster. The managed-cluster templates ({{ fromSecret }},
+# no `hub`) are resolved there at enforcement time, so they can read the MCO-managed secrets in
+# open-cluster-management-observability and are re-evaluated when GH renews its client cert. No key material is in Git.
+# The ManifestWork is the only way a GH object reaches the hosted-mode regional hub (GH's policy controller is off there).
+# The Secret name (gh-observatorium-client) is not an MCOA name, so it never clashes with RH's own MCOA.
+# Lives in ACM's open-cluster-management-global-set namespace, which already has ManagedClusterSetBinding `global`.
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  name: acm47259-gh-write-cert
-  namespace: open-cluster-management-observability
+  name: gh-cert-to-regional-hub
+  namespace: open-cluster-management-global-set
 spec:
   remediationAction: enforce
   disabled: false
@@ -16,7 +18,7 @@ spec:
       apiVersion: policy.open-cluster-management.io/v1
       kind: ConfigurationPolicy
       metadata:
-        name: acm47259-gh-write-cert
+        name: gh-cert-to-regional-hub
       spec:
         remediationAction: enforce
         severity: low
@@ -38,15 +40,30 @@ spec:
                       namespace: open-cluster-management-observability
                     type: Opaque
                     data:
-                      tls.crt: '{{hub fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.crt" hub}}'
-                      tls.key: '{{hub fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.key" hub}}'
-                      ca.crt: '{{hub fromSecret "open-cluster-management-observability" "observability-server-ca-certs" "ca.crt" hub}}'
+                      tls.crt: '{{ fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.crt" }}'
+                      tls.key: '{{ fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.key" }}'
+                      ca.crt: '{{ fromSecret "open-cluster-management-observability" "observability-server-ca-certs" "ca.crt" }}'
+---
+# Selects only the Global Hub's own local-cluster.
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: gh-local-only
+  namespace: open-cluster-management-global-set
+spec:
+  clusterSets:
+  - global
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchLabels:
+          local-cluster: "true"
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: acm47259-gh-write-cert
-  namespace: open-cluster-management-observability
+  name: gh-cert-to-regional-hub
+  namespace: open-cluster-management-global-set
 placementRef:
   apiGroup: cluster.open-cluster-management.io
   kind: Placement
@@ -54,4 +71,4 @@ placementRef:
 subjects:
 - apiGroup: policy.open-cluster-management.io
   kind: Policy
-  name: acm47259-gh-write-cert
+  name: gh-cert-to-regional-hub

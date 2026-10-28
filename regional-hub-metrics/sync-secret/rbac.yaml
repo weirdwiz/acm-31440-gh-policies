@@ -1,11 +1,11 @@
-# Lets the Global Hub's Argo application-controller create this app's objects. Its built-in ClusterRole has no ACM
-# group rights; it can create these grants itself because it holds rbac.authorization.k8s.io "*".
-# Wave -1: applied before the Policy, Placement and ManagedClusterSetBinding in the same sync.
+# Lets the Global Hub's Argo application-controller create this app's Policy, Placement and PlacementBinding.
+# Its built-in ClusterRole has no ACM group rights; it can create this grant itself because it holds
+# rbac.authorization.k8s.io "*". Wave -1: applied first in the same sync.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: sync-secret-to-regional-hub
-  namespace: open-cluster-management-observability
+  namespace: open-cluster-management-global-set
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 rules:
@@ -13,48 +13,20 @@ rules:
   resources: ["policies", "placementbindings"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["cluster.open-cluster-management.io"]
-  resources: ["placements", "managedclustersetbindings"]
+  resources: ["placements"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: sync-secret-to-regional-hub
-  namespace: open-cluster-management-observability
+  namespace: open-cluster-management-global-set
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: sync-secret-to-regional-hub
-subjects:
-- kind: ServiceAccount
-  name: openshift-gitops-argocd-application-controller
-  namespace: openshift-gitops
----
-# The ManagedClusterSetBinding webhook requires "bind" on clusterset "default" (cluster-scoped, so a ClusterRole).
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: sync-secret-to-regional-hub-clusterset-bind
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-rules:
-- apiGroups: ["cluster.open-cluster-management.io"]
-  resources: ["managedclustersets/bind"]
-  resourceNames: ["default"]
-  verbs: ["create"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: sync-secret-to-regional-hub-clusterset-bind
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: sync-secret-to-regional-hub-clusterset-bind
 subjects:
 - kind: ServiceAccount
   name: openshift-gitops-argocd-application-controller
