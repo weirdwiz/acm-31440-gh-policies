@@ -1,0 +1,31 @@
+# RH's own platform collector (template rh-self = RH's local-cluster only) also remote-writes to the Global Hub.
+# Leaves (rh-leaves, vm-cluster) do NOT get this entry.
+# remoteWrite is an atomic list in the CRD: this object lists BOTH entries. The acm-observability entry is copied
+# verbatim from what MCOA renders (MCOA keeps other remoteWrite entries and user secrets by name, agentssa.go).
+# Secret gh-observatorium-client is delivered to RH by the GH ManifestWork (gh/cert/policy.yaml), and MCOA replicates
+# every secret listed in spec.secrets into the agent namespace (handler.go:276). Only key names are in Git.
+apiVersion: monitoring.rhobs/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: mcoa-default-platform-metrics-collector-rh-self
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  secrets:
+  - gh-observatorium-client
+  remoteWrite:
+  - name: acm-observability
+    url: https://observatorium-api-open-cluster-management-observability.apps.dkamboj-regional-hub.az.dev09.red-chesterfield.com/api/metrics/v1/default/api/v1/receive
+    remoteTimeout: 30s
+    tlsConfig:
+      caFile: /etc/prometheus/secrets/observability-managed-cluster-certs/ca.crt
+      certFile: /etc/prometheus/secrets/observability-controller-open-cluster-management.io-observability-signer-client-cert/tls.crt
+      keyFile: /etc/prometheus/secrets/observability-controller-open-cluster-management.io-observability-signer-client-cert/tls.key
+  - name: global-hub
+    url: https://observatorium-api-open-cluster-management-observability.apps.dkamboj-global-hub.az.dev09.red-chesterfield.com/api/metrics/v1/default/api/v1/receive
+    remoteTimeout: 30s
+    tlsConfig:
+      caFile: /etc/prometheus/secrets/gh-observatorium-client/ca.crt
+      certFile: /etc/prometheus/secrets/gh-observatorium-client/tls.crt
+      keyFile: /etc/prometheus/secrets/gh-observatorium-client/tls.key
