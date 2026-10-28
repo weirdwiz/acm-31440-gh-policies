@@ -3,6 +3,6 @@ apiVersion: cluster.open-cluster-management.io/v1beta2
 kind: ManagedClusterSetBinding
 metadata:
   name: default
-  namespace: acm47259-policies
+  namespace: open-cluster-management-observability
 spec:
   clusterSet: default

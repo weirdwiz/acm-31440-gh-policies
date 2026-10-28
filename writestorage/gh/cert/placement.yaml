@@ -3,7 +3,7 @@ apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
 metadata:
   name: gh-local-only
-  namespace: acm47259-policies
+  namespace: open-cluster-management-observability
 spec:
   clusterSets:
   - default

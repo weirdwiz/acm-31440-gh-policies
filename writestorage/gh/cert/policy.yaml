@@ -1,3 +1,4 @@
+# Lives in open-cluster-management-observability: hub fromSecret is restricted to the policy namespace.
 # Owns ManifestWork regional-hub/acm47259-gh-write-cert on the Global Hub. The Secret data is rendered
 # at runtime from the MCO-managed GH source secrets (hub templates); no key material is stored in Git.
 # Because the template is re-evaluated, the ManifestWork follows GH's client-cert renewal.
@@ -6,7 +7,7 @@ apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
   name: acm47259-gh-write-cert
-  namespace: acm47259-policies
+  namespace: open-cluster-management-observability
 spec:
   remediationAction: enforce
   disabled: false
@@ -43,7 +44,7 @@ apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
   name: acm47259-gh-write-cert
-  namespace: acm47259-policies
+  namespace: open-cluster-management-observability
 placementRef:
   apiGroup: cluster.open-cluster-management.io
   kind: Placement
