@@ -21,24 +21,26 @@ spec:
         remediationAction: enforce
         severity: low
         object-templates-raw: |
-          apiVersion: work.open-cluster-management.io/v1
-          kind: ManifestWork
-          metadata:
-            name: acm47259-gh-write-cert
-            namespace: regional-hub
-          spec:
-            workload:
-              manifests:
-              - apiVersion: v1
-                kind: Secret
-                metadata:
-                  name: gh-observatorium-client
-                  namespace: open-cluster-management-observability
-                type: Opaque
-                data:
-                  tls.crt: '{{hub fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.crt" hub}}'
-                  tls.key: '{{hub fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.key" hub}}'
-                  ca.crt: '{{hub fromSecret "open-cluster-management-observability" "observability-server-ca-certs" "ca.crt" hub}}'
+          - complianceType: musthave
+            objectDefinition:
+              apiVersion: work.open-cluster-management.io/v1
+              kind: ManifestWork
+              metadata:
+                name: acm47259-gh-write-cert
+                namespace: regional-hub
+              spec:
+                workload:
+                  manifests:
+                  - apiVersion: v1
+                    kind: Secret
+                    metadata:
+                      name: gh-observatorium-client
+                      namespace: open-cluster-management-observability
+                    type: Opaque
+                    data:
+                      tls.crt: '{{hub fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.crt" hub}}'
+                      tls.key: '{{hub fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.key" hub}}'
+                      ca.crt: '{{hub fromSecret "open-cluster-management-observability" "observability-server-ca-certs" "ca.crt" hub}}'
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
