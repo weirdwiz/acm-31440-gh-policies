@@ -1,13 +1,12 @@
-# wave 1: objects pushed to regional-hub (destination = Argo cluster secret openshift-gitops/regional-hub-gitops-cluster-secret).
+# Argo Application pushed to regional-hub (destination = Argo cluster secret openshift-gitops/regional-hub-gitops-cluster-secret).
+# Retries with backoff: the endpoint works only after the GH cert ManifestWork is Applied on RH.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: writestorage-rh
   namespace: openshift-gitops
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
   finalizers:
-  - resources-finalizer.argocd.argoproj.io
+  - resources-finalizer.argocd.argoproj.io/background
 spec:
   project: default
   source:
@@ -20,5 +19,11 @@ spec:
     automated:
       prune: false
       selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 10m
     syncOptions:
     - ServerSideApply=true

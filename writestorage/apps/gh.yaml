@@ -1,19 +1,20 @@
-# wave 0: GH-side cert delivery (Policy -> ManifestWork regional-hub/acm47259-gh-write-cert) and GH label templates.
+# Argo Application on the Global Hub (in-cluster): cert delivery, GH label templates and, in a later commit,
+# the wave-2 CMA switch. Bootstrap once: KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f writestorage/apps/
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: writestorage-gh-cert
+  name: writestorage-gh
   namespace: openshift-gitops
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
   finalizers:
-  - resources-finalizer.argocd.argoproj.io
+  - resources-finalizer.argocd.argoproj.io/background
 spec:
   project: default
   source:
     repoURL: https://github.com/weirdwiz/acm-31440-gh-policies.git
     targetRevision: writestorage-e2e
-    path: writestorage/gh/cert
+    path: writestorage/gh
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
   syncPolicy:
@@ -22,4 +23,3 @@ spec:
       selfHeal: true
     syncOptions:
     - ServerSideApply=true
-    - ApplyOutOfSyncOnly=true
