@@ -1,0 +1,62 @@
+# RBAC for the Global Hub's Argo application-controller (openshift-gitops-argocd-application-controller).
+# Its built-in ClusterRole has no ACM group rights, so these namespaced Roles grant only what gh/ needs.
+# Wave -1: applied before the Policy, Placement and PrometheusAgent objects in the same sync.
+# The controller can create them because its ClusterRole holds rbac.authorization.k8s.io "*" verbs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: writestorage-argo-acm
+  namespace: acm47259-policies
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+rules:
+- apiGroups: ["policy.open-cluster-management.io"]
+  resources: ["policies", "placementbindings"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["cluster.open-cluster-management.io"]
+  resources: ["placements", "managedclustersetbindings"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: writestorage-argo-acm
+  namespace: acm47259-policies
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: writestorage-argo-acm
+subjects:
+- kind: ServiceAccount
+  name: openshift-gitops-argocd-application-controller
+  namespace: openshift-gitops
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: writestorage-argo-mcoa-templates
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+rules:
+- apiGroups: ["monitoring.rhobs"]
+  resources: ["prometheusagents"]
+  verbs: ["get", "list", "watch", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: writestorage-argo-mcoa-templates
+  namespace: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: writestorage-argo-mcoa-templates
+subjects:
+- kind: ServiceAccount
+  name: openshift-gitops-argocd-application-controller
+  namespace: openshift-gitops

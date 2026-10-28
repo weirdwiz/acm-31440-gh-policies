@@ -1,0 +1,30 @@
+# PREREQUISITE, NOT SYNCED BY ARGO (no Application points at writestorage/prereq/).
+# MCOA placement that excludes regional-hub, which runs its own MCOA (one MCOA parent per cluster).
+# Adopted from the hand-made object on GH (label acm47259-fix). Apply by hand once:
+#   KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f writestorage/prereq/placement-global-mcoa.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: global-mcoa
+  namespace: open-cluster-management-global-set
+  labels:
+    acm47259-fix: "true"
+  annotations:
+    acm47259/purpose: MCOA placement excluding regional-hub, which runs its own MCOA
+      (one MCOA parent per cluster)
+spec:
+  clusterSets:
+  - global
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - key: name
+          operator: NotIn
+          values:
+          - regional-hub
+  tolerations:
+  - key: cluster.open-cluster-management.io/unreachable
+    operator: Equal
+  - key: cluster.open-cluster-management.io/unavailable
+    operator: Equal
