@@ -3,7 +3,7 @@
 apiVersion: monitoring.rhobs/v1alpha1
 kind: PrometheusAgent
 metadata:
-  name: mcoa-default-platform-metrics-collector-global
+  name: mcoa-default-platform-metrics-collector-global-mcoa
   namespace: open-cluster-management-observability
   annotations:
     argocd.argoproj.io/sync-options: Prune=false,Delete=false
@@ -14,7 +14,7 @@ spec:
 apiVersion: monitoring.rhobs/v1alpha1
 kind: PrometheusAgent
 metadata:
-  name: mcoa-default-user-workload-metrics-collector-global
+  name: mcoa-default-user-workload-metrics-collector-global-mcoa
   namespace: open-cluster-management-observability
   annotations:
     argocd.argoproj.io/sync-options: Prune=false,Delete=false
