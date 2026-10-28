@@ -12,6 +12,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
+  externalLabels:
+    managed_hub: regional-hub
   secrets:
   - gh-observatorium-client
   remoteWrite:

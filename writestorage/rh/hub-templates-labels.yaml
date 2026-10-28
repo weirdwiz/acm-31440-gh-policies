@@ -1,16 +1,6 @@
-# RH's own MCOA hub templates (names from the per-placement templates: rh-self = local-cluster, rh-leaves = vm-cluster).
-# RH-owned series carry managed_hub=regional-hub. Partial objects, server-side applied, operator-owned: never prune or delete.
-apiVersion: monitoring.rhobs/v1alpha1
-kind: PrometheusAgent
-metadata:
-  name: mcoa-default-platform-metrics-collector-rh-self
-  namespace: open-cluster-management-observability
-  annotations:
-    argocd.argoproj.io/sync-options: Prune=false,Delete=false
-spec:
-  externalLabels:
-    managed_hub: regional-hub
----
+# RH's own MCOA hub templates for placements rh-self and rh-leaves: RH-owned series carry managed_hub=regional-hub.
+# The rh-self platform object is in rh-self-remotewrite.yaml (Argo applies each object once; one manager per field).
+# Partial objects, server-side applied, operator-owned: never prune or delete.
 apiVersion: monitoring.rhobs/v1alpha1
 kind: PrometheusAgent
 metadata:
