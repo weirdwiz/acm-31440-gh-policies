@@ -22,9 +22,9 @@ spec:
         remediationAction: enforce
         severity: low
         object-templates:
-        # RH's own platform collector, the only one that writes to the Global Hub. On the way to GH only, its
-        # cluster="local-cluster" becomes the name GH knows this hub by (its GH ManagedCluster name, delivered by GH in
-        # ConfigMap global-hub-identity), so GH's dashboards list it. RH's own store keeps local-cluster.
+        # RH's own platform collector, the only one that writes to the Global Hub: extra remote write + origin label.
+        # MCOA enforces cluster="local-cluster" on every remoteWrite entry (MCOA handler.go:241-244), so the cluster label
+        # cannot be renamed here; managed_hub carries the hub's ManagedCluster name on GH (from ConfigMap global-hub-identity).
         - complianceType: musthave
           objectDefinition:
             apiVersion: monitoring.rhobs/v1alpha1
@@ -33,6 +33,8 @@ spec:
               name: mcoa-default-platform-metrics-collector-rh-self
               namespace: open-cluster-management-observability
             spec:
+              externalLabels:
+                managed_hub: '{{ fromConfigMap "open-cluster-management-observability" "global-hub-identity" "clusterName" }}'
               secrets:
               - gh-observatorium-client
               remoteWrite:
@@ -43,12 +45,6 @@ spec:
                   caFile: /etc/prometheus/secrets/gh-observatorium-client/ca.crt
                   certFile: /etc/prometheus/secrets/gh-observatorium-client/tls.crt
                   keyFile: /etc/prometheus/secrets/gh-observatorium-client/tls.key
-                writeRelabelConfigs:
-                - action: replace
-                  sourceLabels: [cluster]
-                  regex: local-cluster
-                  targetLabel: cluster
-                  replacement: '{{ fromConfigMap "open-cluster-management-observability" "global-hub-identity" "clusterName" }}'
 ---
 # Selects only the regional hub's own local-cluster.
 apiVersion: cluster.open-cluster-management.io/v1beta1
