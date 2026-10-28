@@ -23,8 +23,8 @@ spec:
         severity: low
         object-templates:
         # RH's own platform collector, the only one that writes to the Global Hub. On the way to GH only, its
-        # cluster="local-cluster" becomes cluster="regional-hub", the name GH knows it by (a GH ManagedCluster), so GH's
-        # dashboards list it. RH's own store keeps local-cluster.
+        # cluster="local-cluster" becomes the name GH knows this hub by (its GH ManagedCluster name, delivered by GH in
+        # ConfigMap global-hub-identity), so GH's dashboards list it. RH's own store keeps local-cluster.
         - complianceType: musthave
           objectDefinition:
             apiVersion: monitoring.rhobs/v1alpha1
@@ -48,7 +48,7 @@ spec:
                   sourceLabels: [cluster]
                   regex: local-cluster
                   targetLabel: cluster
-                  replacement: regional-hub
+                  replacement: '{{ fromConfigMap "open-cluster-management-observability" "global-hub-identity" "clusterName" }}'
 ---
 # Selects only the regional hub's own local-cluster.
 apiVersion: cluster.open-cluster-management.io/v1beta1

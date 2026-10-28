@@ -9,16 +9,17 @@ RH MCOA, placement rh-self   = [local-cluster] ─► RH Thanos {cluster=local-c
 RH MCOA, placement rh-leaves = [vm-cluster]    ─► RH Thanos only
 GH MCOA, placement global-mcoa = [local-cluster] (excludes regional-hub)  ─► GH Thanos {cluster=local-cluster}
 ```
-On the way to GH, RH's `cluster="local-cluster"` is rewritten to `cluster="regional-hub"`, the name GH knows it by
-(a GH ManagedCluster), so GH's Grafana dashboards list it like any other managed cluster.
+On the way to GH, RH's `cluster="local-cluster"` is rewritten to the hub's ManagedCluster name on GH (`regional-hub` here).
+The name is not hard-coded: GH delivers it in ConfigMap `global-hub-identity`, and RH's Policy reads it with `{{ fromConfigMap }}`.
+So GH's Grafana dashboards list the hub like any other managed cluster.
 
 ## Bootstrap (the only manual apply besides the prerequisites)
     KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f regional-hub-metrics/apps/
 
 | Application | Runs against | Folder | What it does |
 |---|---|---|---|
-| `sync-secret-to-regional-hub` | GH (in-cluster) | `sync-secret/` | Policy `open-cluster-management-global-set/gh-cert-to-regional-hub`, enforced by GH's governance on its local-cluster. It owns ManifestWork `regional-hub/acm47259-gh-write-cert`, which creates Secret `open-cluster-management-observability/gh-observatorium-client` (GH client cert + GH server CA) on RH. Plus one Role so Argo can create the Policy objects |
-| `sync-policy-to-regional-hub` | regional-hub (via GitOpsCluster) | `sync-policy/` | Policy `open-cluster-management-global-set/rh-metrics-to-global-hub`, enforced by RH's governance on its local-cluster. It adds the GH remoteWrite (with a `local-cluster` → `regional-hub` relabel) and the cert secret to RH's own platform collector template |
+| `sync-secret-to-regional-hub` | GH (in-cluster) | `sync-secret/` | Policy `open-cluster-management-global-set/gh-cert-to-regional-hub`, enforced by GH's governance on its local-cluster. For every managed hub (label `feature.open-cluster-management.io/addon-multicluster-global-hub-controller=available`) it owns a ManifestWork `<hub>/acm47259-gh-write-cert`, which creates Secret `open-cluster-management-observability/gh-observatorium-client` (GH client cert + GH server CA) and ConfigMap `global-hub-identity` (`clusterName` = the hub's ManagedCluster name on GH) on that hub. Plus one Role so Argo can create the Policy objects |
+| `sync-policy-to-regional-hub` | regional-hub (via GitOpsCluster) | `sync-policy/` | Policy `open-cluster-management-global-set/rh-metrics-to-global-hub`, enforced by RH's governance on its local-cluster. It adds the GH remoteWrite (with a relabel from `local-cluster` to the name in `global-hub-identity`) and the cert secret to RH's own platform collector template |
 
 Both Policies live in ACM's `open-cluster-management-global-set` namespace, which ACM creates on every hub already
 bound to clusterset `global`. So no Namespace or ManagedClusterSetBinding is needed.
@@ -29,6 +30,7 @@ bound to clusterset `global`. So no Namespace or ManagedClusterSetBinding is nee
   `observability-server-ca-certs` (ca.crt) in `open-cluster-management-observability`, and are re-evaluated, so the
   ManifestWork follows GH's own cert renewal. No key material is in Git or in the Policy objects.
 - ManifestWork is the transport because GH's policy controller is off for the hosted-mode regional hub.
+- The Policy loops (`lookup` + `range`) over the managed hubs, so a new hub gets its cert and identity without editing Git.
 
 ### sync-policy-to-regional-hub
 - `musthave` appends array items and patches items with a matching `name`

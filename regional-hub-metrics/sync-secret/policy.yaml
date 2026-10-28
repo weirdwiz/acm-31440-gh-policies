@@ -1,4 +1,6 @@
-# Copies the Global Hub's metrics write cert to the regional hub.
+# Copies the Global Hub's metrics write cert, and the name GH knows each hub by, to every managed hub.
+# Managed hubs = ManagedClusters running the Global Hub agent (label feature...addon-multicluster-global-hub-controller=available);
+# a new hub gets its ManifestWork automatically.
 # Enforced by the Global Hub's own governance on its local-cluster. The managed-cluster templates ({{ fromSecret }},
 # no `hub`) are resolved there at enforcement time, so they can read the MCO-managed secrets in
 # open-cluster-management-observability and are re-evaluated when GH renews its client cert. No key material is in Git.
@@ -23,13 +25,14 @@ spec:
         remediationAction: enforce
         severity: low
         object-templates-raw: |
+          {{- range $hub := (lookup "cluster.open-cluster-management.io/v1" "ManagedCluster" "" "" "feature.open-cluster-management.io/addon-multicluster-global-hub-controller=available").items }}
           - complianceType: musthave
             objectDefinition:
               apiVersion: work.open-cluster-management.io/v1
               kind: ManifestWork
               metadata:
                 name: acm47259-gh-write-cert
-                namespace: regional-hub
+                namespace: {{ $hub.metadata.name }}
               spec:
                 workload:
                   manifests:
@@ -43,6 +46,15 @@ spec:
                       tls.crt: '{{ fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.crt" }}'
                       tls.key: '{{ fromSecret "open-cluster-management-observability" "observability-controller-open-cluster-management.io-observability-signer-client-cert" "tls.key" }}'
                       ca.crt: '{{ fromSecret "open-cluster-management-observability" "observability-server-ca-certs" "ca.crt" }}'
+                  # The name the Global Hub knows this hub by; RH's Policy uses it to relabel cluster="local-cluster".
+                  - apiVersion: v1
+                    kind: ConfigMap
+                    metadata:
+                      name: global-hub-identity
+                      namespace: open-cluster-management-observability
+                    data:
+                      clusterName: {{ $hub.metadata.name }}
+          {{- end }}
 ---
 # Selects only the Global Hub's own local-cluster.
 apiVersion: cluster.open-cluster-management.io/v1beta1
