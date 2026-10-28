@@ -1,9 +1,9 @@
-# Argo Application on the Global Hub (in-cluster): cert delivery, GH label templates and, in a later commit,
-# the wave-2 CMA switch. Bootstrap once: KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f writestorage/apps/
+# Argo Application on the Global Hub (in-cluster): delivers GH's write cert to regional-hub and labels GH's own series.
+# Bootstrap once: KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f regional-hub-metrics/apps/
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: writestorage-gh
+  name: regional-hub-metrics-gh
   namespace: openshift-gitops
   finalizers:
   - resources-finalizer.argocd.argoproj.io/background
@@ -11,8 +11,8 @@ spec:
   project: default
   source:
     repoURL: https://github.com/weirdwiz/acm-31440-gh-policies.git
-    targetRevision: writestorage-e2e
-    path: writestorage/gh
+    targetRevision: regional-hub-metrics
+    path: regional-hub-metrics/gh
     directory:
       recurse: true
   destination:

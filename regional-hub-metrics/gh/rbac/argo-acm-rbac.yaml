@@ -7,7 +7,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: writestorage-argo-gh
+  name: regional-hub-metrics-argo-gh
   namespace: open-cluster-management-observability
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
@@ -25,14 +25,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: writestorage-argo-gh
+  name: regional-hub-metrics-argo-gh
   namespace: open-cluster-management-observability
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: writestorage-argo-gh
+  name: regional-hub-metrics-argo-gh
 subjects:
 - kind: ServiceAccount
   name: openshift-gitops-argocd-application-controller
@@ -43,7 +43,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: writestorage-argo-clusterset-bind
+  name: regional-hub-metrics-argo-clusterset-bind
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 rules:
@@ -55,13 +55,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: writestorage-argo-clusterset-bind
+  name: regional-hub-metrics-argo-clusterset-bind
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: writestorage-argo-clusterset-bind
+  name: regional-hub-metrics-argo-clusterset-bind
 subjects:
 - kind: ServiceAccount
   name: openshift-gitops-argocd-application-controller

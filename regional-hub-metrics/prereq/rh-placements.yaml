@@ -1,5 +1,5 @@
-# PREREQUISITE ON REGIONAL-HUB, NOT SYNCED BY ARGO (no Application points at writestorage/prereq/).
-# Apply by hand once on RH: KUBECONFIG=$HOME/.kube/acm-31440-rh oc apply -f writestorage/prereq/rh-placements.yaml
+# PREREQUISITE ON REGIONAL-HUB, NOT SYNCED BY ARGO (no Application points at regional-hub-metrics/prereq/).
+# Apply by hand once on RH: KUBECONFIG=$HOME/.kube/acm-31440-rh oc apply -f regional-hub-metrics/prereq/rh-placements.yaml
 apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
 metadata:

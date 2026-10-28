@@ -1,0 +1,117 @@
+# Enforced by the regional hub's own governance on its local-cluster (RH's policy controller works for RH itself).
+# musthave appends array items and patches items whose `name` matches, so this adds only the global-hub
+# remoteWrite entry. MCOA's own acm-observability entry is never copied here; MCOA keeps non-acm entries and
+# listed secrets (agentssa.go) and replicates spec.secrets into the agent namespace (handler.go:276).
+# Only the rh-self template (RH's local-cluster) gets the Global Hub entry; rh-leaves (vm-cluster) never does.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: regional-hub-metrics
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: regional-hub-metrics-to-global-hub
+  namespace: regional-hub-metrics
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: regional-hub-metrics-to-global-hub
+      spec:
+        remediationAction: enforce
+        severity: low
+        object-templates:
+        # RH's own platform collector: label + extra remote write to the Global Hub.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: monitoring.rhobs/v1alpha1
+            kind: PrometheusAgent
+            metadata:
+              name: mcoa-default-platform-metrics-collector-rh-self
+              namespace: open-cluster-management-observability
+            spec:
+              externalLabels:
+                managed_hub: regional-hub
+              secrets:
+              - gh-observatorium-client
+              remoteWrite:
+              - name: global-hub
+                url: https://observatorium-api-open-cluster-management-observability.apps.dkamboj-global-hub.az.dev09.red-chesterfield.com/api/metrics/v1/default/api/v1/receive
+                remoteTimeout: 30s
+                tlsConfig:
+                  caFile: /etc/prometheus/secrets/gh-observatorium-client/ca.crt
+                  certFile: /etc/prometheus/secrets/gh-observatorium-client/tls.crt
+                  keyFile: /etc/prometheus/secrets/gh-observatorium-client/tls.key
+        # Label only: RH's own user workloads and the leaves stay on the regional hub.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: monitoring.rhobs/v1alpha1
+            kind: PrometheusAgent
+            metadata:
+              name: mcoa-default-user-workload-metrics-collector-rh-self
+              namespace: open-cluster-management-observability
+            spec:
+              externalLabels:
+                managed_hub: regional-hub
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: monitoring.rhobs/v1alpha1
+            kind: PrometheusAgent
+            metadata:
+              name: mcoa-default-platform-metrics-collector-rh-leaves
+              namespace: open-cluster-management-observability
+            spec:
+              externalLabels:
+                managed_hub: regional-hub
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: monitoring.rhobs/v1alpha1
+            kind: PrometheusAgent
+            metadata:
+              name: mcoa-default-user-workload-metrics-collector-rh-leaves
+              namespace: open-cluster-management-observability
+            spec:
+              externalLabels:
+                managed_hub: regional-hub
+---
+# Selects only the regional hub's own local-cluster.
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: rh-local-only
+  namespace: regional-hub-metrics
+spec:
+  clusterSets:
+  - default
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchLabels:
+          local-cluster: "true"
+---
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: default
+  namespace: regional-hub-metrics
+spec:
+  clusterSet: default
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: regional-hub-metrics-to-global-hub
+  namespace: regional-hub-metrics
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: rh-local-only
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: regional-hub-metrics-to-global-hub
