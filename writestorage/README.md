@@ -37,3 +37,23 @@ and the names of the cert keys.
    (namespace `open-cluster-management-observability`).
 4. Delete the two Applications (`writestorage-gh`, `writestorage-rh`). Do not delete the CMA.
 5. Remove the `managed_hub` externalLabels from the MCOA templates on both hubs if the label should go.
+
+## Prerequisite: one MCOA parent per cluster (manual, NOT synced by Argo)
+Why: regional-hub is a GH managed cluster and also runs its own MCOA. Both hubs' `multicluster-observability-addon`
+deployed the same-named PrometheusAgents to regional-hub, and the last writer won. The remote-write URL flipped
+between GH and RH. The fix is to make GH's MCOA target everything except regional-hub.
+
+- YAML: `prereq/placement-global-mcoa.yaml` (Placement `global-mcoa`, predicate `name NotIn [regional-hub]`).
+  It is referenced by no Application. Adopt it by hand:
+      KUBECONFIG=$HOME/.kube/acm-31440-gh oc apply -f writestorage/prereq/placement-global-mcoa.yaml
+- Verify first. The decision must be exactly `local-cluster`:
+      KUBECONFIG=$HOME/.kube/acm-31440-gh oc -n open-cluster-management-global-set get placementdecision \
+        -l cluster.open-cluster-management.io/placement=global-mcoa -o jsonpath='{.items[*].status.decisions}'
+- Switch the CMA (JSON patch with a test op, so it fails if the CMA is not on `global`):
+      KUBECONFIG=$HOME/.kube/acm-31440-gh oc patch clustermanagementaddon multicluster-observability-addon --type=json \
+        -p='[{"op":"test","path":"/spec/installStrategy/placements/0/name","value":"global"},{"op":"replace","path":"/spec/installStrategy/placements/0/name","value":"global-mcoa"}]'
+- Side effect seen in this lab: MCO then creates `mcoa-default-*-global-mcoa` PrometheusAgent templates, adds two
+  `-global-mcoa` entries to the CMA configs, and drops the `-global` GH templates. The GH label templates in
+  `gh/cert/mcoa-templates.yaml` therefore target the `-global-mcoa` names.
+- Rollback: patch back with `test` on `global-mcoa` and `replace` to `global`. Then GH's MCOA targets regional-hub again.
+  Expect the clash to return. Do not delete the Placement or the CMA.
