@@ -3,16 +3,12 @@
 # remoteWrite entry. MCOA's own acm-observability entry is never copied here; MCOA keeps non-acm entries and
 # listed secrets (agentssa.go) and replicates spec.secrets into the agent namespace (handler.go:276).
 # Only the rh-self template (RH's local-cluster) gets the Global Hub entry; rh-leaves (vm-cluster) never does.
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: regional-hub-metrics
----
+# Lives in ACM's open-cluster-management-global-set namespace, which already has ManagedClusterSetBinding `global`.
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  name: regional-hub-metrics-to-global-hub
-  namespace: regional-hub-metrics
+  name: rh-metrics-to-global-hub
+  namespace: open-cluster-management-global-set
 spec:
   remediationAction: enforce
   disabled: false
@@ -21,7 +17,7 @@ spec:
       apiVersion: policy.open-cluster-management.io/v1
       kind: ConfigurationPolicy
       metadata:
-        name: regional-hub-metrics-to-global-hub
+        name: rh-metrics-to-global-hub
       spec:
         remediationAction: enforce
         severity: low
@@ -84,29 +80,21 @@ apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
 metadata:
   name: rh-local-only
-  namespace: regional-hub-metrics
+  namespace: open-cluster-management-global-set
 spec:
   clusterSets:
-  - default
+  - global
   predicates:
   - requiredClusterSelector:
       labelSelector:
         matchLabels:
           local-cluster: "true"
 ---
-apiVersion: cluster.open-cluster-management.io/v1beta2
-kind: ManagedClusterSetBinding
-metadata:
-  name: default
-  namespace: regional-hub-metrics
-spec:
-  clusterSet: default
----
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: regional-hub-metrics-to-global-hub
-  namespace: regional-hub-metrics
+  name: rh-metrics-to-global-hub
+  namespace: open-cluster-management-global-set
 placementRef:
   apiGroup: cluster.open-cluster-management.io
   kind: Placement
@@ -114,4 +102,4 @@ placementRef:
 subjects:
 - apiGroup: policy.open-cluster-management.io
   kind: Policy
-  name: regional-hub-metrics-to-global-hub
+  name: rh-metrics-to-global-hub

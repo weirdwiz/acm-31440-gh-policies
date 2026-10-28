@@ -16,8 +16,8 @@ GH MCOA, placement global-mcoa = [local-cluster] (excludes regional-hub)  {clust
 | Application | Runs against | Folder | What it does |
 |---|---|---|---|
 | `sync-secret-to-regional-hub` | GH (in-cluster) | `sync-secret/` | Copies GH's metrics write cert to RH: Policy `acm47259-gh-write-cert` (on GH's local-cluster) owns ManifestWork `regional-hub/acm47259-gh-write-cert`, which creates Secret `open-cluster-management-observability/gh-observatorium-client` (GH client cert + GH server CA) on RH. Plus the Argo RBAC it needs |
-| `sync-policy-to-regional-hub` | regional-hub (via GitOpsCluster) | `sync-policy/` | Policy `regional-hub-metrics/regional-hub-metrics-to-global-hub`, enforced by RH's own governance on its local-cluster: adds the GH remoteWrite to RH's own collector and labels RH's series |
-| `label-global-hub-metrics` | GH (in-cluster) | `label-global-hub/` | `managed_hub=global-hub` on GH's own MCOA templates, so GH's local-cluster never mixes with RH's. Plus the Argo RBAC it needs |
+| `sync-policy-to-regional-hub` | regional-hub (via GitOpsCluster) | `sync-policy/` | Policy `open-cluster-management-global-set/rh-metrics-to-global-hub` (ACM's namespace, already bound to clusterset `global`), enforced by RH's own governance on its local-cluster: adds the GH remoteWrite to RH's own collector and labels RH's series |
+| `label-global-hub-metrics` | GH (in-cluster) | `label-global-hub/` | Policy `open-cluster-management-observability/label-global-hub-metrics`, enforced by GH's own governance on its local-cluster: adds `managed_hub=global-hub` to GH's own MCOA templates, so GH's local-cluster never mixes with RH's. Uses the `default` ClusterSetBinding from `sync-secret-to-regional-hub`. Plus the Argo RBAC it needs |
 
 ### How the RH Policy works
 `musthave` appends array items and patches items with a matching `name`
@@ -45,7 +45,7 @@ The ClusterManagementAddOn placements are cluster setup. Re-apply them after any
          -l cluster.open-cluster-management.io/placement=global-mcoa -o jsonpath='{.items[*].status.decisions}'
        KUBECONFIG=$HOME/.kube/acm-31440-gh oc patch clustermanagementaddon multicluster-observability-addon --type=json \
          -p='[{"op":"test","path":"/spec/installStrategy/placements/0/name","value":"global"},{"op":"replace","path":"/spec/installStrategy/placements/0/name","value":"global-mcoa"}]'
-   MCO then creates `mcoa-default-*-global-mcoa` templates; `label-global-hub/mcoa-templates.yaml` targets those names.
+   MCO then creates `mcoa-default-*-global-mcoa` templates; `label-global-hub/policy.yaml` targets those names.
 2. **RH: split RH's MCOA into rh-self and rh-leaves** so only RH's own collector gets the extra remote write.
        KUBECONFIG=$HOME/.kube/acm-31440-rh oc apply -f regional-hub-metrics/prereq/rh-placements.yaml
        # decisions must be [local-cluster] and [vm-cluster]; back up the CMA (oc get ... -o json) first, then:
@@ -58,10 +58,10 @@ The ClusterManagementAddOn placements are cluster setup. Re-apply them after any
 - GH Thanos: `count by (cluster, managed_hub) (up)` shows `{local-cluster, regional-hub}` and `{local-cluster, global-hub}`, and no `vm-cluster`.
 - RH Thanos: `local-cluster` and `vm-cluster`, both `managed_hub=regional-hub`.
 - RH: `oc get prometheusagent.monitoring.rhobs -n open-cluster-management-agent-addon platform-metrics-collector` has remoteWrite `[acm-observability, global-hub]`; vm-cluster's has only `acm-observability`.
-- RH: `oc get policy -n local-cluster` shows `regional-hub-metrics.regional-hub-metrics-to-global-hub` Compliant.
+- RH: `oc get policy -n local-cluster` shows `open-cluster-management-global-set.rh-metrics-to-global-hub` Compliant; on GH, `oc get policy -n local-cluster` shows `open-cluster-management-observability.label-global-hub-metrics` and `.acm47259-gh-write-cert` Compliant.
 
 ## Rollback
 1. Delete the three Applications. Prune is off, so the objects stay.
-2. On RH: delete Policy `regional-hub-metrics/regional-hub-metrics-to-global-hub`, then remove the `global-hub` entry and `gh-observatorium-client` from the rh-self template.
+2. On RH: delete Policy `open-cluster-management-global-set/rh-metrics-to-global-hub`, then remove the `global-hub` entry and `gh-observatorium-client` from the rh-self template.
 3. On GH: delete Policy `open-cluster-management-observability/acm47259-gh-write-cert` and ManifestWork `regional-hub/acm47259-gh-write-cert`.
 4. Prerequisites: patch each CMA back to a single `global` placement. On GH this brings the overwrite clash back.
