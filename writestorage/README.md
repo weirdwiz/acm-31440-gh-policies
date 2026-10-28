@@ -14,7 +14,7 @@ Every other object comes from Git through them. No RBAC is applied by hand.
 ## Waves inside `writestorage-gh`
 | Wave | Path | Objects |
 |---|---|---|
-| 0 | `gh/cert/` | Namespace `acm47259-policies`; ClusterSetBinding and Placement `gh-local-only` (GH local-cluster only); Policy `acm47259-gh-write-cert` that owns ManifestWork `regional-hub/acm47259-gh-write-cert` (Secret `gh-observatorium-client` on RH, data rendered from GH's MCO-managed secrets at runtime, nothing in Git); GH MCOA templates with `externalLabels.managed_hub=global-hub` |
+| 0 | `gh/cert/` | ClusterSetBinding and Placement `gh-local-only` (GH local-cluster only); Policy `acm47259-gh-write-cert` that owns ManifestWork `regional-hub/acm47259-gh-write-cert` (Secret `gh-observatorium-client` on RH, data rendered from GH's MCO-managed secrets at runtime, nothing in Git); GH MCOA templates with `externalLabels.managed_hub=global-hub` |
 | 1 | `gh/mcoa/` (gate, added in a later commit) | Sync hook Job that waits until ManifestWork `regional-hub/acm47259-gh-write-cert` has condition Applied |
 | 2 | `gh/mcoa/` (later commit) | Placement `global-mcoa` (adopted unchanged); ClusterManagementAddOn `multicluster-observability-addon` with placement `global` changed to `global-mcoa`. This is the clash fix |
 
@@ -34,6 +34,6 @@ and the names of the cert keys.
 2. Remove `spec.storageConfig.writeStorage` from MCO `observability` on RH and delete Secret
    `gh-observatorium-endpoint` there.
 3. Delete ManifestWork `regional-hub/acm47259-gh-write-cert` and Policy `acm47259-gh-write-cert`
-   (namespace `acm47259-policies`).
+   (namespace `open-cluster-management-observability`).
 4. Delete the two Applications (`writestorage-gh`, `writestorage-rh`). Do not delete the CMA.
 5. Remove the `managed_hub` externalLabels from the MCOA templates on both hubs if the label should go.
